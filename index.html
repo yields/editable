@@ -1,1 +1,189 @@
-My Page
+<!doctype html>
+<html>
+  <head>
+    <title>contenteditable sucks</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel='stylesheet' href='font.css'>
+    <link rel='stylesheet' href='styles.css'>
+  </head>
+  <body>
+
+  <!-- toolbar -->
+    <div id='toolbar'>
+      <ul>
+        <li><a href='#' class='icon-bold' data-action='bold' title='⌘ + b'></a></li>
+        <li><a href='#' class='icon-italic' data-action='italic' title='⌘ + i'></a></li>
+        <li><a href='#' class='icon-underline' data-action='underline' title='⌘ + u'></a></li>
+        <li><a href='#' class='icon-list' data-action='insertUnorderedList' title='⌘ + l'></a></li>
+        <li><a href='#' class='icon-list-2' data-action='insertOrderedList'></a></li>
+        <li><a href='#' class='icon-strikethrough' data-action='strikethrough' title='⌘ + s'></a></li>
+        <li><a href='#' class='icon-link' id='link'></a></li>
+        <li><a href='#' class='icon-image' id='image'></a></li>
+        <li><a href='#' class='icon-paragraph-justify' data-action='justifyfull' title='⌘ + j'></a></li>
+        <li><a href='#' class='icon-paragraph-right' data-action='justifyright' title='⌘ + j'></a></li>
+        <li><a href='#' class='icon-paragraph-left' data-action='justifyleft' title='⌘ + j'></a></li>
+        <li><a href='#' class='icon-paragraph-center' data-action='justifycenter' title='⌘ + j'></a></li>
+        <li><a href='#' class='icon-indent' data-action='indent' title='⌘ + right'></a></li>
+        <li><a href='#' class='icon-outdent' data-action='outdent' title='⌘ + left'></a></li>
+        <li><a href='#' class='icon-undo' data-action='undo' title='⌘ + z'></a></li>
+        <li><a href='#' class='icon-redo' data-action='redo' title='⌘ + y'></a></li>
+        <li><a href='#' class='icon-droplet not-implemented' title='not implemented yet.' id='pick-color'></a></li>
+      </ul>
+    </div>
+
+    <div id='body'>
+    <!-- editor -->
+      <div id='editable'>
+
+        <h1>Some cool title</h1>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+
+      </div>
+
+        <p style="text-align: center;">
+          Found a Bug ? <a href="https://github.com/yields/editable/issues">click here!</a>
+        </p>
+
+    <!-- output -->
+      <div id='output'></div>
+    </div>
+
+  <!-- move this to `./editor.js` -->
+    <script src='../build/build.js'></script>
+    <script>
+
+      // stuff
+
+      var anchors = document.querySelectorAll('a')
+        , Editable = require('editable')
+        , el = document.querySelector('#editable')
+        , editable = new Editable(el)
+        , k = require('k')(el)
+        , n = 0;
+
+
+      // anchors
+      anchors = [].slice.call(anchors);
+
+      // bind events and enable editable.
+
+      shortcuts();
+      clicks();
+      editable.enable();
+
+      // onstatechange, toggle all buttons
+
+      editable.on('state', function(){
+        anchors.forEach(function(el){
+          var action = el.getAttribute('data-action');
+          if (!action) return;
+          editable.state(action)
+            ? el.setAttribute('data-selected', true)
+            : el.removeAttribute('data-selected');
+        });
+      });
+
+      // bind clicks
+
+      function clicks(e){
+        document.body.onclick = onclick;
+        image();
+        link();
+        colors();
+      }
+
+      // onclick
+
+      function onclick(e){
+        var cmd = action(e);
+        if (!cmd) return;
+        prevent(e);
+        editable.execute(cmd);
+      }
+
+      // handle colors, todo use `yields/colorpicker` and `component/dialog`.
+
+      function colors(){}
+
+      // handle link
+
+      function link(){
+        var el = document.querySelector('#link');
+        el.onclick = function(e){
+          e.stopPropagation();
+          var href = prompt('href: ');
+          editable.execute('createLink', href);
+        }
+      }
+
+      // handle `img`
+
+      function image(){
+        var el = document.querySelector('#image');
+        el.onclick = function(e){
+          e.stopPropagation();
+          var src = prompt('src: ');
+          editable.execute('insertImage', src);
+        }
+      }
+
+      // bind shortcuts
+
+      function shortcuts(){
+        k('command + z, ctrl + z', prevent);
+        k('command + y, ctrl + y', prevent);
+        k('command + z, ctrl + z', editable.undo.bind(editable));
+        k('command + y, ctrl + y', editable.redo.bind(editable));
+        k('command + b, ctrl + b', execute('bold'));
+        k('command + i, ctrl + i', execute('italic'));
+        k('command + u, ctrl + u', execute('underline'));
+        k('command + l, ctrl + l', execute('insertUnorderedList'));
+        k('command + s, ctrl + s', execute('strikethrough'));
+        k('command + j, ctrl + j', toggleJustify);
+      }
+
+      // toggleJustify
+
+      function toggleJustify(e){
+        prevent(e);
+        if (4 == n) n = 0;
+        editable.execute('justify' + [
+          'right',
+          'center',
+          'full',
+          'left'
+        ][n++]);
+      }
+
+      // execute the given `action`
+
+      function execute(action){
+        return (function(e){
+          prevent(e);
+          editable.execute(action);
+        });
+      }
+
+      // prevent default
+
+      function prevent(e){
+        e.preventDefault();
+      }
+
+      // get action from `e` or undefined.
+
+      function action(e){
+        return 'A' == e.target.nodeName
+          ? e.target.getAttribute('data-action')
+          : null;
+      }
+    </script>
+  </body>
+</html>

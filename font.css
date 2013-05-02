@@ -1,0 +1,85 @@
+@font-face {
+	font-family: 'icomoon';
+	src:url('fonts/icomoon.eot');
+	src:url('fonts/icomoon.eot?#iefix') format('embedded-opentype'),
+		url('fonts/icomoon.woff') format('woff'),
+		url('fonts/icomoon.ttf') format('truetype'),
+		url('fonts/icomoon.svg#icomoon') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+
+/* Use the following CSS code if you want to have a class per icon */
+/*
+Instead of a list of all class selectors,
+you can use the generic selector below, but it's slower:
+[class*="icon-"] {
+*/
+.icon-bold, .icon-italic, .icon-underline, .icon-strikethrough, .icon-link, .icon-image, .icon-file-xml, .icon-droplet, .icon-font, .icon-list, .icon-list-2, .icon-paragraph-justify, .icon-paragraph-right, .icon-paragraph-center, .icon-paragraph-left, .icon-indent-decrease, .icon-indent-increase, .icon-undo, .icon-redo {
+	font-family: 'icomoon';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+}
+.icon-bold:before {
+	content: "\e000";
+}
+.icon-italic:before {
+	content: "\e002";
+}
+.icon-underline:before {
+	content: "\e001";
+}
+.icon-strikethrough:before {
+	content: "\e003";
+}
+.icon-link:before {
+	content: "\e004";
+}
+.icon-image:before {
+	content: "\e005";
+}
+.icon-file-xml:before {
+	content: "\e006";
+}
+.icon-droplet:before {
+	content: "\e007";
+}
+.icon-font:before {
+	content: "\e008";
+}
+.icon-list:before {
+	content: "\e009";
+}
+.icon-list-2:before {
+	content: "\e00a";
+}
+.icon-paragraph-justify:before {
+	content: "\e00b";
+}
+.icon-paragraph-right:before {
+	content: "\e00c";
+}
+.icon-paragraph-center:before {
+	content: "\e00d";
+}
+.icon-paragraph-left:before {
+	content: "\e00e";
+}
+.icon-indent-decrease:before {
+	content: "\e00f";
+}
+.icon-indent-increase:before {
+	content: "\e010";
+}
+.icon-undo:before {
+	content: "\e011";
+}
+.icon-redo:before {
+	content: "\e012";
+}
