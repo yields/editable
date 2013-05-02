@@ -1,7 +1,7 @@
 
 # editable
 
-  Fixing `contenteditable`.
+  Fixing `contenteditable`, checkout the [demo](http://yields.github.io/editable/index.html) find bugs and report :)
 
 #### Goals
   
