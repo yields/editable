@@ -129,7 +129,6 @@ Editable.prototype.undo = function(){
   var buf = this.history.prev();
   if (!buf) return this;
   this.el.innerHTML = buf;
-  console.count(buf);
   position(this.el, buf.at);
   this.emit('state');
   return this;
