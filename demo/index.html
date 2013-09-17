@@ -127,6 +127,7 @@
         el.onclick = function(e){
           e.stopPropagation();
           var src = prompt('src: ');
+          if (!src) return;
           editable.execute('insertImage', src);
         }
       }
