@@ -127,8 +127,9 @@ Editable.prototype.selection = function(){
 
 Editable.prototype.undo = function(){
   var buf = this.history.prev();
-  this.el.innerHTML = buf || this.el.innerHTML;
-  buf || this.emit('state');
+  if (!buf) return this;
+  this.el.innerHTML = buf;
+  this.emit('state');
   return this;
 };
 
@@ -141,9 +142,9 @@ Editable.prototype.undo = function(){
 
 Editable.prototype.redo = function(){
   var buf = this.history.next();
-  var curr = this.el.innerHTML;
-  this.el.innerHTML = buf || curr;
-  buf || this.emit('state');
+  if (!buf) return this;
+  this.el.innerHTML = buf;
+  this.emit('state');
   return this;
 };
 
@@ -204,3 +205,5 @@ Editable.prototype.onchange = function(e){
   this.history.add(this.contents());
   return this.emit('change', e);
 };
+
+
