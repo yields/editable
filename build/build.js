@@ -1146,14 +1146,14 @@ var History = require('history')\n\
   , events = require('events');\n\
 \n\
 /**\n\
- * export `Editable`.\n\
+ * Export `Editable`.\n\
  */\n\
 \n\
 module.exports = Editable;\n\
 \n\
 /**\n\
  * Initialize new `Editable`.\n\
- * \n\
+ *\n\
  * @param {Element} el\n\
  * @param {Array} stack\n\
  */\n\
@@ -1169,15 +1169,16 @@ function Editable(el, stack){\n\
 }\n\
 \n\
 /**\n\
- * mixins.\n\
+ * Mixins.\n\
  */\n\
 \n\
 emitter(Editable.prototype);\n\
 \n\
 /**\n\
  * Get editable contents.\n\
- * \n\
+ *\n\
  * @return {String}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.contents = function(){\n\
@@ -1186,8 +1187,9 @@ Editable.prototype.contents = function(){\n\
 \n\
 /**\n\
  * Toggle editable state.\n\
- * \n\
+ *\n\
  * @return {Editable}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.toggle = function(){\n\
@@ -1198,8 +1200,9 @@ Editable.prototype.toggle = function(){\n\
 \n\
 /**\n\
  * Enable editable.\n\
- * \n\
+ *\n\
  * @return {Editable}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.enable = function(){\n\
@@ -1215,8 +1218,9 @@ Editable.prototype.enable = function(){\n\
 \n\
 /**\n\
  * Disable editable.\n\
- * \n\
+ *\n\
  * @return {Editable}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.disable = function(){\n\
@@ -1228,10 +1232,11 @@ Editable.prototype.disable = function(){\n\
 \n\
 /**\n\
  * Get range.\n\
- * \n\
+ *\n\
  * TODO: x-browser\n\
- * \n\
+ *\n\
  * @return {Range}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.range = function(){\n\
@@ -1240,10 +1245,11 @@ Editable.prototype.range = function(){\n\
 \n\
 /**\n\
  * Get selection.\n\
- * \n\
+ *\n\
  * TODO: x-browser\n\
- * \n\
+ *\n\
  * @return {Selection}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.selection = function(){\n\
@@ -1252,37 +1258,44 @@ Editable.prototype.selection = function(){\n\
 \n\
 /**\n\
  * Undo.\n\
- * \n\
+ *\n\
  * @return {Editable}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.undo = function(){\n\
   var buf = this.history.prev();\n\
-  this.el.innerHTML = buf || this.el.innerHTML;\n\
-  buf || this.emit('state');\n\
+  if (!buf) return this;\n\
+  this.el.innerHTML = buf;\n\
+  console.count(buf);\n\
+  position(this.el, buf.at);\n\
+  this.emit('state');\n\
   return this;\n\
 };\n\
 \n\
 /**\n\
  * Redo.\n\
- * \n\
+ *\n\
  * @return {Editable}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.redo = function(){\n\
   var buf = this.history.next();\n\
-  var curr = this.el.innerHTML;\n\
-  this.el.innerHTML = buf || curr;\n\
-  buf || this.emit('state');\n\
+  if (!buf) return this;\n\
+  this.el.innerHTML = buf;\n\
+  position(this.el, buf.at);\n\
+  this.emit('state');\n\
   return this;\n\
 };\n\
 \n\
 /**\n\
  * Execute the given `cmd` with `val`.\n\
- * \n\
+ *\n\
  * @param {String} cmd\n\
  * @param {Mixed} val\n\
  * @return {Editable}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.execute = function(cmd, val){\n\
@@ -1293,9 +1306,10 @@ Editable.prototype.execute = function(cmd, val){\n\
 \n\
 /**\n\
  * Query `cmd` state.\n\
- * \n\
+ *\n\
  * @param {String} cmd\n\
  * @return {Boolean}\n\
+ * @api public\n\
  */\n\
 \n\
 Editable.prototype.state = function(cmd){\n\
@@ -1309,7 +1323,7 @@ Editable.prototype.state = function(cmd){\n\
 \n\
 /**\n\
  * Emit `state`.\n\
- * \n\
+ *\n\
  * @param {Event} e\n\
  * @return {Editable}\n\
  * @api private\n\
@@ -1322,16 +1336,75 @@ Editable.prototype.onstatechange = function(e){\n\
 \n\
 /**\n\
  * Emit `change` and push current `buf` to history.\n\
- * \n\
+ *\n\
  * @param {Event} e\n\
  * @return {Editable}\n\
  * @api private\n\
  */\n\
 \n\
 Editable.prototype.onchange = function(e){\n\
-  this.history.add(this.contents());\n\
+  var buf = new String(this.contents());\n\
+  buf.at = position(el);\n\
+  this.history.add(buf);\n\
   return this.emit('change', e);\n\
 };\n\
+\n\
+/**\n\
+ * Set / get caret position with `el`.\n\
+ *\n\
+ * @param {Element} el\n\
+ * @param {Number} at\n\
+ * @return {Number}\n\
+ * @api private\n\
+ */\n\
+\n\
+function position(el, at){\n\
+  if (1 == arguments.length) {\n\
+    var range = window.getSelection().getRangeAt(0);\n\
+    var clone = range.cloneRange();\n\
+    clone.selectNodeContents(el);\n\
+    clone.setEnd(range.endContainer, range.endOffset);\n\
+    return clone.toString().length;\n\
+  }\n\
+\n\
+  var length = 0\n\
+    , abort;\n\
+\n\
+  visit(el, function(node){\n\
+    if (3 != node.nodeType) return;\n\
+    length += node.textContent.length;\n\
+    if (length >= at) {\n\
+      if (abort) return;\n\
+      abort = true;\n\
+      var sel = document.getSelection();\n\
+      var range = document.createRange();\n\
+      var sub = length - node.textContent.length;\n\
+      range.setStart(node, at - sub);\n\
+      range.setEnd(node, at - sub);\n\
+      sel.removeAllRanges();\n\
+      sel.addRange(range);\n\
+      return true;\n\
+    }\n\
+  });\n\
+}\n\
+\n\
+/**\n\
+ * Walk all text nodes of `node`.\n\
+ *\n\
+ * @param {Element|Node} node\n\
+ * @param {Function} fn\n\
+ * @api private\n\
+ */\n\
+\n\
+function visit(node, fn){\n\
+  var nodes = node.childNodes;\n\
+  for (var i = 0; i < nodes.length; ++i) {\n\
+    if (fn(nodes[i])) break;\n\
+    visit(nodes[i], fn);\n\
+  }\n\
+}\n\
+\n\
+\n\
 //@ sourceURL=editable/index.js"
 ));
 
