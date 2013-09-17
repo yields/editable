@@ -102,6 +102,8 @@
         var cmd = action(e);
         if (!cmd) return;
         prevent(e);
+        if ('undo' == cmd) return editable.undo();
+        if ('redo' == cmd) return editable.redo();
         editable.execute(cmd);
       }
 

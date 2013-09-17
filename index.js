@@ -129,6 +129,8 @@ Editable.prototype.undo = function(){
   var buf = this.history.prev();
   if (!buf) return this;
   this.el.innerHTML = buf;
+  console.count(buf);
+  position(this.el, buf.at);
   this.emit('state');
   return this;
 };
@@ -144,6 +146,7 @@ Editable.prototype.redo = function(){
   var buf = this.history.next();
   if (!buf) return this;
   this.el.innerHTML = buf;
+  position(this.el, buf.at);
   this.emit('state');
   return this;
 };
@@ -202,8 +205,65 @@ Editable.prototype.onstatechange = function(e){
  */
 
 Editable.prototype.onchange = function(e){
-  this.history.add(this.contents());
+  var buf = new String(this.contents());
+  buf.at = position(el);
+  this.history.add(buf);
   return this.emit('change', e);
 };
+
+/**
+ * Set / get caret position with `el`.
+ *
+ * @param {Element} el
+ * @param {Number} at
+ * @return {Number}
+ * @api private
+ */
+
+function position(el, at){
+  if (1 == arguments.length) {
+    var range = window.getSelection().getRangeAt(0);
+    var clone = range.cloneRange();
+    clone.selectNodeContents(el);
+    clone.setEnd(range.endContainer, range.endOffset);
+    return clone.toString().length;
+  }
+
+  var length = 0
+    , abort;
+
+  visit(el, function(node){
+    if (3 != node.nodeType) return;
+    length += node.textContent.length;
+    if (length >= at) {
+      if (abort) return;
+      abort = true;
+      var sel = document.getSelection();
+      var range = document.createRange();
+      var sub = length - node.textContent.length;
+      range.setStart(node, at - sub);
+      range.setEnd(node, at - sub);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      return true;
+    }
+  });
+}
+
+/**
+ * Walk all text nodes of `node`.
+ *
+ * @param {Element|Node} node
+ * @param {Function} fn
+ * @api private
+ */
+
+function visit(node, fn){
+  var nodes = node.childNodes;
+  for (var i = 0; i < nodes.length; ++i) {
+    if (fn(nodes[i])) break;
+    visit(nodes[i], fn);
+  }
+}
 
 
