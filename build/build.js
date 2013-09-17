@@ -490,7 +490,7 @@ require.register("component-event/index.js", Function("exports, require, module"
 \n\
 exports.bind = function(el, type, fn, capture){\n\
   if (el.addEventListener) {\n\
-    el.addEventListener(type, fn, capture);\n\
+    el.addEventListener(type, fn, capture || false);\n\
   } else {\n\
     el.attachEvent('on' + type, fn);\n\
   }\n\
@@ -510,13 +510,10 @@ exports.bind = function(el, type, fn, capture){\n\
 \n\
 exports.unbind = function(el, type, fn, capture){\n\
   if (el.removeEventListener) {\n\
-    el.removeEventListener(type, fn, capture);\n\
+    el.removeEventListener(type, fn, capture || false);\n\
   } else {\n\
     el.detachEvent('on' + type, fn);\n\
   }\n\
-  return fn;\n\
-};\n\
-}\n\
   return fn;\n\
 };\n\
 //@ sourceURL=component-event/index.js"
