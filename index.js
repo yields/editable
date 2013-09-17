@@ -8,14 +8,14 @@ var History = require('history')
   , events = require('events');
 
 /**
- * export `Editable`.
+ * Export `Editable`.
  */
 
 module.exports = Editable;
 
 /**
  * Initialize new `Editable`.
- * 
+ *
  * @param {Element} el
  * @param {Array} stack
  */
@@ -31,15 +31,16 @@ function Editable(el, stack){
 }
 
 /**
- * mixins.
+ * Mixins.
  */
 
 emitter(Editable.prototype);
 
 /**
  * Get editable contents.
- * 
+ *
  * @return {String}
+ * @api public
  */
 
 Editable.prototype.contents = function(){
@@ -48,8 +49,9 @@ Editable.prototype.contents = function(){
 
 /**
  * Toggle editable state.
- * 
+ *
  * @return {Editable}
+ * @api public
  */
 
 Editable.prototype.toggle = function(){
@@ -60,8 +62,9 @@ Editable.prototype.toggle = function(){
 
 /**
  * Enable editable.
- * 
+ *
  * @return {Editable}
+ * @api public
  */
 
 Editable.prototype.enable = function(){
@@ -77,8 +80,9 @@ Editable.prototype.enable = function(){
 
 /**
  * Disable editable.
- * 
+ *
  * @return {Editable}
+ * @api public
  */
 
 Editable.prototype.disable = function(){
@@ -90,10 +94,11 @@ Editable.prototype.disable = function(){
 
 /**
  * Get range.
- * 
+ *
  * TODO: x-browser
- * 
+ *
  * @return {Range}
+ * @api public
  */
 
 Editable.prototype.range = function(){
@@ -102,10 +107,11 @@ Editable.prototype.range = function(){
 
 /**
  * Get selection.
- * 
+ *
  * TODO: x-browser
- * 
+ *
  * @return {Selection}
+ * @api public
  */
 
 Editable.prototype.selection = function(){
@@ -114,8 +120,9 @@ Editable.prototype.selection = function(){
 
 /**
  * Undo.
- * 
+ *
  * @return {Editable}
+ * @api public
  */
 
 Editable.prototype.undo = function(){
@@ -127,8 +134,9 @@ Editable.prototype.undo = function(){
 
 /**
  * Redo.
- * 
+ *
  * @return {Editable}
+ * @api public
  */
 
 Editable.prototype.redo = function(){
@@ -141,10 +149,11 @@ Editable.prototype.redo = function(){
 
 /**
  * Execute the given `cmd` with `val`.
- * 
+ *
  * @param {String} cmd
  * @param {Mixed} val
  * @return {Editable}
+ * @api public
  */
 
 Editable.prototype.execute = function(cmd, val){
@@ -155,9 +164,10 @@ Editable.prototype.execute = function(cmd, val){
 
 /**
  * Query `cmd` state.
- * 
+ *
  * @param {String} cmd
  * @return {Boolean}
+ * @api public
  */
 
 Editable.prototype.state = function(cmd){
@@ -171,7 +181,7 @@ Editable.prototype.state = function(cmd){
 
 /**
  * Emit `state`.
- * 
+ *
  * @param {Event} e
  * @return {Editable}
  * @api private
@@ -184,7 +194,7 @@ Editable.prototype.onstatechange = function(e){
 
 /**
  * Emit `change` and push current `buf` to history.
- * 
+ *
  * @param {Event} e
  * @return {Editable}
  * @api private
