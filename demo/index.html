@@ -1,12 +1,33 @@
 <!doctype html>
 <html>
   <head>
-    <title>contenteditable sucks</title>
+    <meta charset='utf8'>
+    <title>Editable</title>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
     <link rel='stylesheet' href='font.css'>
     <link rel='stylesheet' href='styles.css'>
   </head>
   <body>
+
+    <div id='editor'>
+    <!-- editor -->
+      <div id='editable'>
+
+        <h1>Some cool title</h1>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+
+      </div>
+
+    <!-- output -->
+      <div id='output'></div>
+    </div>
 
   <!-- toolbar -->
     <div id='toolbar'>
@@ -29,30 +50,6 @@
         <li><a href='#' class='icon-redo' data-action='redo' title='⌘ + y'></a></li>
         <li><a href='#' class='icon-droplet not-implemented' title='not implemented yet.' id='pick-color'></a></li>
       </ul>
-    </div>
-
-    <div id='body'>
-    <!-- editor -->
-      <div id='editable'>
-
-        <h1>Some cool title</h1>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-
-      </div>
-
-        <p style="text-align: center;">
-          Found a Bug ? <a href="https://github.com/yields/editable/issues">click here!</a>
-        </p>
-
-    <!-- output -->
-      <div id='output'></div>
     </div>
 
   <!-- move this to `./editor.js` -->

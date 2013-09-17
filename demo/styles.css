@@ -1,73 +1,54 @@
 
+:focus {
+  outline: none;
+}
+
 body {
-  color: #444;
-  margin: 0;
-  font-family: 'Open Sans', 'Lucida Grande', 'Segoe UI', sans-serif;
+  font: 13px/1.6 'Helvetica Neue', 'Lucida Grande', 'Segoe UI', Arial sans-serif;
+  font-weight: 200;
+  padding: 100px;
 }
 
-a {
-  color: rgb(63, 191, 191);
+h1 {
+  font-weight: 400;
 }
 
-#body {
-  margin: 10px auto;
-  width: 800px;
+#bug {
+  border-top: 1px solid #f0f0f0;
+  padding: 3px;
+  color: #666;
 }
 
-#toolbar {
-  background: #333;
-  padding: 8px 0;
-  box-shadow: inset 0 0 5px 0px #000;
-}
-
-#toolbar ul {
-  padding: 0;
-  margin: 0 auto;
-  list-style: none;
-  width: 800px;
-}
-
-#toolbar ul li {
-  display: inline-block;
-}
-
-#toolbar a {
-  padding: 4px 8px;
-  text-decoration: none;
-  color: #aaa;
-  font-size: 18px;
-}
-
-#toolbar a[data-selected],
-#toolbar a:hover {
-  color: rgb(63, 191, 191);
-}
-
-#toolbar li:last-child {
-  float: right;
-}
-
-.not-implemented {
-  color: #444 !important;
-}
-
-
-#editable {
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-  font-family: 'Lucida Grande', 'Segoe UI', sans-serif;
-  min-height: 300px;
-  margin-top: 10px;
-  border-radius: 2px;
+#editor {
+  float: left;
+  width: 500px;
   padding: 8px;
 }
 
-#editable:focus {
-  outline: 0 none;
+#toolbar {
+  float: left;
+  border-left: 1px solid #eee;
+  padding: 8px;
+  background-image: -webkit-linear-gradient(left, #f9f9f9 0%, #fff 8px);
+  box-shadow: inset 1px 0 0 #f6f6f6;
 }
 
-#output {
-  font-family: 'Monaco', 'inconsolata', 'consolas', monospace;
-  margin-top: 10px;
-  font-size: 11px;
+#toolbar ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+#toolbar li a {
+  margin: 0 8px;
+  color: #666;
+  text-decoration: none;
+}
+
+[data-selected] {
+  color: rgb(63, 191, 191) !important
+}
+
+#toolbar li a:hover {
+  color: #333;
 }
