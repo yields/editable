@@ -1,11 +1,11 @@
 
-build: components index.js
-	@component build --dev
+build.js: components
+	@component build --out . --name build
 
 components: component.json
-	@component install --dev
+	@component install
 
 clean:
-	rm -fr build components template.js
+	rm -rf build.js components
 
 .PHONY: clean

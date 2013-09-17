@@ -1,20 +1,7 @@
 {
-  "name": "editable",
-  "repo": "yields/editable",
-  "description": "Fixing contenteditable.",
-  "version": "0.0.1",
-  "keywords": ["editable", "content", "content editable sucks"],
+  "name": "editable-demo",
   "dependencies": {
-    "component/history": "*",
-    "component/emitter": "*",
-    "component/events": "*"
-  },
-  "development": {
+    "yields/editable": "*",
     "yields/k": "*"
-  },
-  "license": "MIT",
-  "main": "index.js",
-  "scripts": [
-    "index.js"
-  ]
+  }
 }
