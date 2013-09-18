@@ -43,6 +43,7 @@ emitter(Editable.prototype);
  * @api public
  */
 
+Editable.prototype.toString =
 Editable.prototype.contents = function(){
   return this.el.innerHTML;
 };
@@ -204,7 +205,7 @@ Editable.prototype.onstatechange = function(e){
  */
 
 Editable.prototype.onchange = function(e){
-  var buf = new String(this.contents());
+  var buf = new String(this.toString());
   buf.at = position(el);
   this.history.add(buf);
   return this.emit('change', e);
