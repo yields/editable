@@ -3,11 +3,16 @@
   "repo": "yields/editable",
   "description": "Fixing contenteditable.",
   "version": "0.1.0",
-  "keywords": ["editable", "content", "content editable sucks"],
+  "keywords": [
+    "editable",
+    "content",
+    "content editable sucks"
+  ],
   "dependencies": {
     "component/history": "*",
     "component/emitter": "*",
-    "component/events": "*"
+    "component/events": "*",
+    "bmcmahen/auto-save": "*"
   },
   "development": {
     "yields/k": "*"
@@ -16,5 +21,6 @@
   "main": "index.js",
   "scripts": [
     "index.js"
-  ]
+  ],
+  "remotes": []
 }

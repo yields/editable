@@ -5,7 +5,8 @@
 
 var History = require('history')
   , emitter = require('emitter')
-  , events = require('events');
+  , events = require('events')
+  , autosave = require('auto-save')(500);
 
 /**
  * Export `Editable`.
@@ -205,10 +206,13 @@ Editable.prototype.onstatechange = function(e){
  */
 
 Editable.prototype.onchange = function(e){
-  var buf = new String(this.toString());
-  buf.at = position(el);
-  this.history.add(buf);
-  return this.emit('change', e);
+  var self = this;
+  autosave(function(){
+    var buf = new String(self.toString());
+    buf.at = position(el);
+    self.history.add(buf);
+    return self.emit('change', e);
+  });
 };
 
 /**
