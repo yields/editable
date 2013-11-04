@@ -1024,7 +1024,7 @@ Editable.prototype.redo = function(){
 
 Editable.prototype.execute = function(cmd, val){
   document.execCommand(cmd, false, val);
-  this.onstatechange();
+  this.onstatechange({});
   return this;
 };
 
