@@ -1,6 +1,6 @@
 
 build.js: components
-	@component build --out . --name build
+	@component build
 
 components: component.json
 	@component install

@@ -358,7 +358,8 @@ function mixin(obj) {
  * @api public
  */
 
-Emitter.prototype.on = function(event, fn){
+Emitter.prototype.on =
+Emitter.prototype.addEventListener = function(event, fn){
   this._callbacks = this._callbacks || {};
   (this._callbacks[event] = this._callbacks[event] || [])
     .push(fn);
@@ -401,7 +402,8 @@ Emitter.prototype.once = function(event, fn){
 
 Emitter.prototype.off =
 Emitter.prototype.removeListener =
-Emitter.prototype.removeAllListeners = function(event, fn){
+Emitter.prototype.removeAllListeners =
+Emitter.prototype.removeEventListener = function(event, fn){
   this._callbacks = this._callbacks || {};
 
   // all
@@ -490,7 +492,7 @@ require.register("component-event/index.js", function(exports, require, module){
 
 exports.bind = function(el, type, fn, capture){
   if (el.addEventListener) {
-    el.addEventListener(type, fn, capture);
+    el.addEventListener(type, fn, capture || false);
   } else {
     el.attachEvent('on' + type, fn);
   }
@@ -510,7 +512,7 @@ exports.bind = function(el, type, fn, capture){
 
 exports.unbind = function(el, type, fn, capture){
   if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture);
+    el.removeEventListener(type, fn, capture || false);
   } else {
     el.detachEvent('on' + type, fn);
   }
@@ -519,7 +521,6 @@ exports.unbind = function(el, type, fn, capture){
 
 });
 require.register("component-query/index.js", function(exports, require, module){
-
 function one(selector, el) {
   return el.querySelector(selector);
 }
@@ -539,6 +540,7 @@ exports.engine = function(obj){
   if (!obj.all) throw new Error('.all callback required');
   one = obj.one;
   exports.all = obj.all;
+  return exports;
 };
 
 });
@@ -559,7 +561,7 @@ var proto = Element.prototype;
  * Vendor function.
  */
 
-var vendor = proto.matchesSelector
+var vendor = proto.matches
   || proto.webkitMatchesSelector
   || proto.mozMatchesSelector
   || proto.msMatchesSelector
@@ -590,13 +592,32 @@ function match(el, selector) {
 }
 
 });
-require.register("component-delegate/index.js", function(exports, require, module){
+require.register("discore-closest/index.js", function(exports, require, module){
+var matches = require('matches-selector')
 
+module.exports = function (element, selector, checkYoSelf, root) {
+  element = checkYoSelf ? element : element.parentNode
+  root = root || document
+
+  do {
+    if (matches(element, selector))
+      return element
+    // After `matches` on the edge case that
+    // the selector matches the root
+    // (when the root is not the document)
+    if (element === root)
+      return
+    // Make sure `element !== document`
+    // otherwise we get an illegal invocation
+  } while ((element = element.parentNode) && element !== document)
+}
+});
+require.register("component-delegate/index.js", function(exports, require, module){
 /**
  * Module dependencies.
  */
 
-var matches = require('matches-selector')
+var closest = require('closest')
   , event = require('event');
 
 /**
@@ -615,9 +636,10 @@ var matches = require('matches-selector')
 
 exports.bind = function(el, selector, type, fn, capture){
   return event.bind(el, type, function(e){
-    if (matches(e.target, selector)) fn(e);
+    var target = e.target || e.srcElement;
+    e.delegateTarget = closest(target, selector, true, el);
+    if (e.delegateTarget) fn.call(el, e);
   }, capture);
-  return callback;
 };
 
 /**
@@ -814,6 +836,28 @@ function parse(event) {
 }
 
 });
+require.register("bmcmahen-auto-save/index.js", function(exports, require, module){
+/**
+ * Basically a glorified setTimeout that I inevitably
+ * implement in any auto-save context.
+ * @param  {Number} time ms
+ * @return {Timer}      
+ */
+
+module.exports = function(time){
+  var time = time || 1000;
+  var timer;
+  var resetTimer = function(fn){
+    timer = setTimeout(fn, time);
+  };
+  return function(fn){
+    clearTimeout(timer);
+    resetTimer(fn);
+  }
+};
+
+
+});
 require.register("yields-editable/index.js", function(exports, require, module){
 
 /**
@@ -822,7 +866,8 @@ require.register("yields-editable/index.js", function(exports, require, module){
 
 var History = require('history')
   , emitter = require('emitter')
-  , events = require('events');
+  , events = require('events')
+  , autosave = require('auto-save')(500);
 
 /**
  * Export `Editable`.
@@ -860,6 +905,7 @@ emitter(Editable.prototype);
  * @api public
  */
 
+Editable.prototype.toString =
 Editable.prototype.contents = function(){
   return this.el.innerHTML;
 };
@@ -946,7 +992,6 @@ Editable.prototype.undo = function(){
   var buf = this.history.prev();
   if (!buf) return this;
   this.el.innerHTML = buf;
-  console.count(buf);
   position(this.el, buf.at);
   this.emit('state');
   return this;
@@ -1009,6 +1054,12 @@ Editable.prototype.state = function(cmd){
  */
 
 Editable.prototype.onstatechange = function(e){
+  var history = this.history.vals.length;
+
+  if ('focus' == e.type && 0 == history) {
+    this.onchange();
+  }
+
   this.emit('state', e);
   return this;
 };
@@ -1022,10 +1073,13 @@ Editable.prototype.onstatechange = function(e){
  */
 
 Editable.prototype.onchange = function(e){
-  var buf = new String(this.contents());
-  buf.at = position(el);
-  this.history.add(buf);
-  return this.emit('change', e);
+  var self = this;
+  autosave(function(){
+    var buf = new String(self.toString());
+    buf.at = position(el);
+    self.history.add(buf);
+    return self.emit('change', e);
+  });
 };
 
 /**
@@ -1086,6 +1140,68 @@ function visit(node, fn){
 
 
 });
+require.register("yields-k-sequence/index.js", function(exports, require, module){
+
+/**
+ * dependencies
+ */
+
+var keycode = require('keycode');
+
+/**
+ * Export `sequence`
+ */
+
+module.exports = sequence;
+
+/**
+ * Create sequence fn with `keys`.
+ * optional `ms` which defaults
+ * to `500ms` and `fn`.
+ *
+ * Example:
+ *
+ *      seq = sequence('a b c', fn);
+ *      el.addEventListener('keydown', seq);
+ *
+ * @param {String} keys
+ * @param {Number} ms
+ * @param {Function} fn
+ * @return {Function}
+ * @api public
+ */
+
+function sequence(keys, ms, fn){
+  var codes = keys.split(/ +/).map(keycode)
+    , clen = codes.length
+    , seq = []
+    , i = 0
+    , prev;
+
+  if (2 == arguments.length) {
+    fn = ms;
+    ms = 500;
+  }
+
+  return function(e){
+    var code = codes[i++];
+    if (42 != code && code != e.which) return reset();
+    if (prev && new Date - prev > ms) return reset();
+    var len = seq.push(e.which);
+    prev = new Date;
+    if (len != clen) return;
+    reset();
+    fn(e);
+  };
+
+  function reset(){
+    prev = null;
+    seq = [];
+    i = 0;
+  }
+};
+
+});
 require.register("yields-keycode/index.js", function(exports, require, module){
 
 /**
@@ -1094,6 +1210,7 @@ require.register("yields-keycode/index.js", function(exports, require, module){
 
 var map = {
     backspace: 8
+  , command: 91
   , tab: 9
   , clear: 12
   , enter: 13
@@ -1175,7 +1292,7 @@ function os() {
 }
 
 });
-require.register("yields-k/index.js", function(exports, require, module){
+require.register("yields-k/lib/index.js", function(exports, require, module){
 
 /**
  * dependencies.
@@ -1186,7 +1303,7 @@ var event = require('event')
   , bind = require('bind');
 
 /**
- * create a new dispatcher with `el`.
+ * Create a new dispatcher with `el`.
  *
  * example:
  *
@@ -1195,6 +1312,7 @@ var event = require('event')
  *
  * @param {Element} el
  * @return {Function}
+ * @api public
  */
 
 module.exports = function(el){
@@ -1202,22 +1320,24 @@ module.exports = function(el){
   k._handle = bind(k, proto.handle);
   k._clear = bind(k, proto.clear);
   event.bind(el, 'keydown', k._handle, false);
+  event.bind(el, 'keyup', k._handle, false);
   event.bind(el, 'keyup', k._clear, false);
   event.bind(el, 'focus', k._clear, false);
-  k.listeners = {};
   for (var p in proto) k[p] = proto[p];
+  k.listeners = [];
   k.el = el;
   return k;
 };
 
 });
-require.register("yields-k/proto.js", function(exports, require, module){
+require.register("yields-k/lib/proto.js", function(exports, require, module){
 
 /**
  * dependencies
  */
 
-var keycode = require('keycode')
+var sequence = require('k-sequence')
+  , keycode = require('keycode')
   , event = require('event')
   , os = require('os');
 
@@ -1242,29 +1362,27 @@ exports.super = 'mac' == os
   : 'ctrl';
 
 /**
- * handle the given `KeyboardEvent` or bind
+ * Handle the given `KeyboardEvent` or bind
  * a new `keys` handler.
  *
  * @param {String|KeyboardEvent} e
  * @param {Function} fn
+ * @api private
  */
 
 exports.handle = function(e, fn){
-  var all = this.listeners[e.which]
-    , len = all && all.length
-    , ignore = this.ignore
-    , invoke = true
-    , handle
-    , mods
-    , mlen;
+  var ignore = this.ignore;
+  var event = e.type;
+  var code = e.which;
 
   // bind
   if (fn) return this.bind(e, fn);
 
   // modifiers
-  if (modifiers[e.which]) {
-    this.super = exports.super == modifiers[e.which];
-    this[modifiers[e.which]] = true;
+  var mod = modifiers[code];
+  if ('keydown' == event && mod) {
+    this.super = exports.super == mod;
+    this[mod] = true;
     this.modifiers = true;
     return;
   }
@@ -1272,37 +1390,47 @@ exports.handle = function(e, fn){
   // ignore
   if (ignore && ignore(e)) return;
 
-  // match
-  for (var i = 0; i < len; ++i) {
-    invoke = true;
-    handle = all[i];
-    mods = handle.mods;
-    mlen = mods.length;
+  // listeners
+  var all = this.listeners;
 
-    for (var j = 0; j < mlen; ++j) {
+  // match
+  for (var i = 0; i < all.length; ++i) {
+    var invoke = true;
+    var obj = all[i];
+    var seq = obj.seq;
+    var mods = obj.mods;
+    var fn = seq || obj.fn;
+
+    if (!seq && code != obj.code) continue;
+    if (event != obj.event) continue;
+
+    for (var j = 0; j < mods.length; ++j) {
       if (!this[mods[j]]) {
         invoke = null;
         break;
       }
     }
 
-    invoke && handle.fn(e);
+    invoke && fn(e);
   }
 };
 
 /**
- * destroy this `k` dispatcher instance.
+ * Destroy this `k` dispatcher instance.
+ *
+ * @api public
  */
 
 exports.destroy = function(){
   event.unbind(this.el, 'keydown', this._handle);
+  event.unbind(this.el, 'keyup', this._handle);
   event.unbind(this.el, 'keyup', this._clear);
   event.unbind(this.el, 'focus', this._clear);
-  this.listeners = {};
+  this.listeners = [];
 };
 
 /**
- * unbind the given `keys` with optional `fn`.
+ * Unbind the given `keys` with optional `fn`.
  *
  * example:
  *
@@ -1312,28 +1440,33 @@ exports.destroy = function(){
  *
  * @param {String} keys
  * @param {Function} fn
- * @return {self}
+ * @return {k}
+ * @api public
  */
 
 exports.unbind = function(keys, fn){
-  var listeners = this.listeners
-    , index
-    , key
-    , len;
+  var fns = this.listeners
+    , len = fns.length
+    , all;
 
-  if (!keys) {
-    this.listeners = {};
+  // unbind all
+  if (0 == arguments.length) {
+    this.listeners = [];
     return this;
   }
 
-  keys = keys.split(/ *, */);
-  for (var i = 0, len = keys.length; i < len; ++i) {
-    key = keycode(keys[i]);
-    if (null == fn) {
-      listeners[key] = [];
-    } else {
-      index = listeners[key].indexOf(fn);
-      listeners[key].splice(i, 1);
+  // parse
+  all = parseKeys(keys);
+
+  // unbind
+  for (var i = 0; i < all.length; ++i) {
+    for (var j = 0, obj; j < len; ++j) {
+      obj = fns[j];
+      if (!obj) continue;
+      if (fn && obj.fn != fn) continue;
+      if (obj.key != all[i].key) continue;
+      if (!matches(obj, all[i])) continue;
+      fns.splice(j--, 1);
     }
   }
 
@@ -1341,48 +1474,78 @@ exports.unbind = function(keys, fn){
 };
 
 /**
- * bind the given `keys` to `fn`.
+ * Bind the given `keys` to `fn` with optional `event`
  *
  * example:
  *
  *      k.bind('shift + tab, ctrl + a', function(e){});
  *
+ * @param {String} event
  * @param {String} keys
  * @param {Function} fn
- * @return {self}
+ * @return {k}
+ * @api public
  */
 
-exports.bind = function(keys, fn){
+exports.bind = function(event, keys, fn){
   var fns = this.listeners
-    , mods = []
-    , key;
+    , len
+    , all;
 
-  // superkey
-  keys = keys.replace('super', exports.super);
+  if (2 == arguments.length) {
+    fn = keys;
+    keys = event;
+    event = 'keydown';
+  }
 
-  // support `,`
-  var all = ',' != keys
-    ? keys.split(/ *, */)
-    : [','];
+  all = parseKeys(keys);
+  len = all.length;
 
-  // bind
-  for (var i = 0, len = all.length; i < len; ++i) {
-    if ('' == all[i]) continue;
-    mods = all[i].split(/ *\+ */);
-    key = keycode(mods.pop() || ',');
-    if (!fns[key]) fns[key] = [];
-    fns[key].push({ mods: mods, fn: fn });
+  for (var i = 0; i < len; ++i) {
+    var obj = all[i];
+    obj.seq = obj.seq && sequence(obj.key, fn);
+    obj.event = event;
+    obj.fn = fn;
+    fns.push(obj);
   }
 
   return this;
 };
 
 /**
- * clear all modifiers on `keyup`.
+ * Bind keyup with `keys` and `fn`.
+ *
+ * @param {String} keys
+ * @param {Function} fn
+ * @return {k}
+ * @api public
+ */
+
+exports.up = function(keys, fn){
+  return this.bind('keyup', keys, fn);
+};
+
+/**
+ * Bind keydown with `keys` and `fn`.
+ *
+ * @param {String} keys
+ * @param {Function} fn
+ * @return {k}
+ * @api public
+ */
+
+exports.down = function(keys, fn){
+  return this.bind('keydown', keys, fn);
+};
+
+/**
+ * Clear all modifiers on `keyup`.
+ *
+ * @api private
  */
 
 exports.clear = function(e){
-  var code = e.keyCode;
+  var code = e.keyCode || e.which;
   if (!(code in modifiers)) return;
   this[modifiers[code]] = null;
   this.modifiers = this.command
@@ -1396,6 +1559,7 @@ exports.clear = function(e){
  *
  * @param {Event} e
  * @return {Boolean}
+ * @api private
  */
 
 exports.ignore = function(e){
@@ -1406,7 +1570,80 @@ exports.ignore = function(e){
     || 'input' == name;
 };
 
+/**
+ * Parse the given `keys`.
+ *
+ * @param {String} keys
+ * @return {Array}
+ * @api private
+ */
+
+function parseKeys(keys){
+  keys = keys.replace('super', exports.super);
+
+  var all = ',' != keys
+    ? keys.split(/ *, */)
+    : [','];
+
+  var ret = [];
+  for (var i = 0; i < all.length; ++i) {
+    if ('' == all[i]) continue;
+    var mods = all[i].split(/ *\+ */);
+    var key = mods.pop() || ',';
+
+    ret.push({
+      seq: !!~ key.indexOf(' '),
+      code: keycode(key),
+      mods: mods,
+      key: key
+    });
+  }
+
+  return ret;
+}
+
+/**
+ * Check if the given `a` matches `b`.
+ *
+ * @param {Object} a
+ * @param {Object} b
+ * @return {Boolean}
+ * @api private
+ */
+
+function matches(a, b){
+  return 0 == b.mods.length || eql(a, b);
+}
+
+/**
+ * Shallow eql util.
+ *
+ * TODO: move to yields/eql
+ *
+ * @param {Array} a
+ * @param {Array} b
+ * @return {Boolean}
+ * @api private
+ */
+
+function eql(a, b){
+  a = a.mods.sort().toString();
+  b = b.mods.sort().toString();
+  return a == b;
+}
+
 });
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1426,15 +1663,27 @@ require.alias("component-events/index.js", "yields-editable/deps/events/index.js
 require.alias("component-event/index.js", "component-events/deps/event/index.js");
 
 require.alias("component-delegate/index.js", "component-events/deps/delegate/index.js");
-require.alias("component-matches-selector/index.js", "component-delegate/deps/matches-selector/index.js");
+require.alias("discore-closest/index.js", "component-delegate/deps/closest/index.js");
+require.alias("discore-closest/index.js", "component-delegate/deps/closest/index.js");
+require.alias("component-matches-selector/index.js", "discore-closest/deps/matches-selector/index.js");
 require.alias("component-query/index.js", "component-matches-selector/deps/query/index.js");
 
+require.alias("discore-closest/index.js", "discore-closest/index.js");
 require.alias("component-event/index.js", "component-delegate/deps/event/index.js");
 
+require.alias("bmcmahen-auto-save/index.js", "yields-editable/deps/auto-save/index.js");
+require.alias("bmcmahen-auto-save/index.js", "yields-editable/deps/auto-save/index.js");
+require.alias("bmcmahen-auto-save/index.js", "bmcmahen-auto-save/index.js");
 require.alias("yields-editable/index.js", "yields-editable/index.js");
-require.alias("yields-k/index.js", "editable-demo/deps/k/index.js");
-require.alias("yields-k/proto.js", "editable-demo/deps/k/proto.js");
-require.alias("yields-k/index.js", "k/index.js");
+require.alias("yields-k/lib/index.js", "editable-demo/deps/k/lib/index.js");
+require.alias("yields-k/lib/proto.js", "editable-demo/deps/k/lib/proto.js");
+require.alias("yields-k/lib/index.js", "editable-demo/deps/k/index.js");
+require.alias("yields-k/lib/index.js", "k/index.js");
+require.alias("yields-k-sequence/index.js", "yields-k/deps/k-sequence/index.js");
+require.alias("yields-k-sequence/index.js", "yields-k/deps/k-sequence/index.js");
+require.alias("yields-keycode/index.js", "yields-k-sequence/deps/keycode/index.js");
+
+require.alias("yields-k-sequence/index.js", "yields-k-sequence/index.js");
 require.alias("yields-keycode/index.js", "yields-k/deps/keycode/index.js");
 
 require.alias("component-event/index.js", "yields-k/deps/event/index.js");
@@ -1442,3 +1691,5 @@ require.alias("component-event/index.js", "yields-k/deps/event/index.js");
 require.alias("component-bind/index.js", "yields-k/deps/bind/index.js");
 
 require.alias("component-os/index.js", "yields-k/deps/os/index.js");
+
+require.alias("yields-k/lib/index.js", "yields-k/index.js");
