@@ -193,6 +193,12 @@ Editable.prototype.state = function(cmd){
  */
 
 Editable.prototype.onstatechange = function(e){
+  var history = this.history.vals.length;
+
+  if ('focus' == e.type && 0 == history) {
+    this.onchange();
+  }
+
   this.emit('state', e);
   return this;
 };
