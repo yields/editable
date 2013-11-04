@@ -1,4 +1,11 @@
 
+0.2.0 / 2013-11-04
+==================
+
+ * push initial string to history, closes #10
+ * push to history every 500ms [bmcmahen]
+ * alias .contents() to .toString()
+
 0.1.0 / 2013-09-17
 ==================
 
