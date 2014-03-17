@@ -1,4 +1,9 @@
 
+0.2.2 / 2014-03-17
+==================
+
+ * Try to fix onchange which is throwing an undefined 'el' error. closes #17
+
 0.2.1 / 2013-11-04
 ==================
 
